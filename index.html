@@ -11,6 +11,7 @@
   <!-- Firebase SDK (Compat 버전 - 빌드 도구 없이 즉시 동작) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     :root {
@@ -1028,6 +1029,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyBMTuIqgPIkpTh0ZFdhYpzbbRtdBmS8RcY",
       authDomain: "exe1-dd0a2.firebaseapp.com",
+      databaseURL: "https://exe1-dd0a2-default-rtdb.firebaseio.com",
       projectId: "exe1-dd0a2",
       storageBucket: "exe1-dd0a2.firebasestorage.app",
       messagingSenderId: "995293145620",
@@ -1037,14 +1039,22 @@
 
     let currentUser = null;
     let auth = null;
+    let rtdb = null;
     let db = null;
+    let rtdbRef = null;
+    let firestoreUnsub = null;
     let isCloudSyncing = false;
 
     try {
       if (typeof firebase !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
-        db = firebase.firestore();
+        if (typeof firebase.database === 'function') {
+          rtdb = firebase.database();
+        }
+        if (typeof firebase.firestore === 'function') {
+          db = firebase.firestore();
+        }
       }
     } catch (err) {
       console.warn("Firebase 초기화 알림:", err);
@@ -1052,19 +1062,26 @@
 
     // 클라우드로 데이터 업로드 (동기화)
     async function syncToCloud() {
-      if (!currentUser || !db || isCloudSyncing) return;
+      if (!currentUser || isCloudSyncing) return;
       updateSyncBadge('☁️ 동기화 중...', '#0284c7', '#e0f2fe');
 
+      const payload = {
+        calendarData: getStore(),
+        trips: getEventsStore(),
+        customThemes: getCustomThemes(),
+        updatedAt: Date.now(),
+        userEmail: currentUser.email || ''
+      };
+
       try {
-        const payload = {
-          calendarData: getStore(),
-          trips: getEventsStore(),
-          customThemes: getCustomThemes(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          userEmail: currentUser.email || ''
-        };
-        await db.collection('user_calendars').doc(currentUser.uid).set(payload, { merge: true });
-        updateSyncBadge('☁️ 실시간 동기화 완료', '#059669', '#d1fae5');
+        if (rtdb) {
+          await rtdb.ref('user_calendars/' + currentUser.uid).set(payload);
+          updateSyncBadge('☁️ 실시간 동기화 완료', '#059669', '#d1fae5');
+        } else if (db) {
+          payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+          await db.collection('user_calendars').doc(currentUser.uid).set(payload, { merge: true });
+          updateSyncBadge('☁️ 실시간 동기화 완료', '#059669', '#d1fae5');
+        }
       } catch (e) {
         console.warn("클라우드 업로드 실패:", e);
         updateSyncBadge('⚠️ 동기화 대기 중', '#d97706', '#fef3c7');
@@ -1073,26 +1090,64 @@
 
     // 클라우드 실시간 리스너 (폰/PC 양방향 즉시 반영)
     function listenToCloud(uid) {
-      if (!db) return;
-      db.collection('user_calendars').doc(uid).onSnapshot(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          if (data && data.calendarData) {
-            isCloudSyncing = true;
-            setStore(data.calendarData);
-            if (data.trips) setEventsStore(data.trips);
-            if (data.customThemes) setCustomThemes(data.customThemes);
-            renderCalendar();
-            isCloudSyncing = false;
-            updateSyncBadge('☁️ 실시간 동기화 완료', '#059669', '#d1fae5');
+      if (rtdbRef) {
+        try { rtdbRef.off(); } catch (e) {}
+        rtdbRef = null;
+      }
+      if (firestoreUnsub) {
+        try { firestoreUnsub(); } catch (e) {}
+        firestoreUnsub = null;
+      }
+
+      if (rtdb) {
+        rtdbRef = rtdb.ref('user_calendars/' + uid);
+        rtdbRef.on('value', snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            if (data && data.calendarData) {
+              isCloudSyncing = true;
+              setStore(data.calendarData);
+              if (data.trips) setEventsStore(data.trips);
+              if (data.customThemes) setCustomThemes(data.customThemes);
+              renderCalendar();
+              if (selectedDateStr && document.getElementById('modal-overlay').style.display === 'flex') {
+                openModal(selectedDateStr);
+              }
+              isCloudSyncing = false;
+              updateSyncBadge('☁️ 실시간 동기화 완료', '#059669', '#d1fae5');
+            }
+          } else {
+            // 클라우드에 아직 데이터가 없으면 현재 로컬 데이터를 최초 업로드
+            syncToCloud();
           }
-        } else {
-          // 클라우드에 아직 데이터가 없으면 현재 로컬 데이터를 최초 업로드
-          syncToCloud();
-        }
-      }, err => {
-        console.warn("클라우드 실시간 수신 오류:", err);
-      });
+        }, err => {
+          console.warn("실시간 수신 오류:", err);
+          updateSyncBadge('⚠️ 실시간 연결 오류', '#ef4444', '#fee2e2');
+        });
+      } else if (db) {
+        firestoreUnsub = db.collection('user_calendars').doc(uid).onSnapshot(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            if (data && data.calendarData) {
+              isCloudSyncing = true;
+              setStore(data.calendarData);
+              if (data.trips) setEventsStore(data.trips);
+              if (data.customThemes) setCustomThemes(data.customThemes);
+              renderCalendar();
+              if (selectedDateStr && document.getElementById('modal-overlay').style.display === 'flex') {
+                openModal(selectedDateStr);
+              }
+              isCloudSyncing = false;
+              updateSyncBadge('☁️ 실시간 동기화 완료', '#059669', '#d1fae5');
+            }
+          } else {
+            syncToCloud();
+          }
+        }, err => {
+          console.warn("클라우드 실시간 수신 오류:", err);
+          updateSyncBadge('⚠️ 실시간 연결 오류', '#ef4444', '#fee2e2');
+        });
+      }
     }
 
     function updateSyncBadge(text, color, bg) {
@@ -1113,6 +1168,14 @@
 
       if (currentUser) {
         if (confirm(`'${currentUser.displayName || currentUser.email}' 계정에서 로그아웃 하시겠습니까?`)) {
+          if (rtdbRef) {
+            try { rtdbRef.off(); } catch (e) {}
+            rtdbRef = null;
+          }
+          if (firestoreUnsub) {
+            try { firestoreUnsub(); } catch (e) {}
+            firestoreUnsub = null;
+          }
           auth.signOut().then(() => {
             showToast("로그아웃 되었습니다.");
           });
@@ -1130,7 +1193,7 @@
           if (err.code === 'auth/popup-blocked') {
             auth.signInWithRedirect(provider);
           } else {
-            alert(`구글 로그인 안내:\nFirebase 콘솔의 Authentication에서 Google 로그인을 사용 설정해주세요.\n(${err.message})`);
+            alert(`구글 로그인 안내:\n${err.message}`);
           }
         });
     }
