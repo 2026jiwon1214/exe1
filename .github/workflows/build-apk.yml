@@ -26,15 +26,22 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK (using pre-installed SDK)
+        run: |
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls $ANDROID_SDK_ROOT || true
+          ls /usr/local/lib/android/sdk/ || true
 
       - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses || true
+        run: |
+          export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Install required SDK components
         run: |
-          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+          export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" --sdk_root=$ANDROID_SDK_ROOT
 
       - name: Make gradlew executable
         working-directory: ./android
@@ -43,8 +50,11 @@ jobs:
       - name: Build APK with Gradle Wrapper
         working-directory: ./android
         env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         run: |
+          export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
           ./gradlew assembleDebug --no-daemon --stacktrace 2>&1
 
       - name: Copy APK to repository root
