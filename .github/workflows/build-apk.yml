@@ -26,36 +26,45 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK (using pre-installed SDK)
+      - name: Locate Android SDK
+        id: sdk
         run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls $ANDROID_SDK_ROOT || true
-          ls /usr/local/lib/android/sdk/ || true
+          # GitHub Ubuntu runners have the SDK at this path
+          SDK_PATH="/usr/local/lib/android/sdk"
+          echo "SDK path: $SDK_PATH"
+          ls "$SDK_PATH" || true
+          echo "ANDROID_SDK_ROOT=$SDK_PATH" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$SDK_PATH" >> $GITHUB_ENV
 
       - name: Accept Android SDK Licenses
         run: |
-          export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
 
       - name: Install required SDK components
         run: |
-          export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" --sdk_root=$ANDROID_SDK_ROOT
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            --sdk_root=$ANDROID_SDK_ROOT
+
+      - name: Create local.properties
+        working-directory: ./android
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          cat local.properties
 
       - name: Make gradlew executable
         working-directory: ./android
         run: chmod +x gradlew
 
-      - name: Build APK with Gradle Wrapper
+      - name: Build APK
         working-directory: ./android
-        env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
-          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         run: |
-          export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1
+          ./gradlew assembleDebug --no-daemon --info 2>&1 | tail -100
+
+      - name: Show APK output
+        run: |
+          find android -name "*.apk" 2>/dev/null || echo "No APK found"
 
       - name: Copy APK to repository root
         run: |
