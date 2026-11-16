@@ -2,8 +2,19 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>데일리로그 - 달력 일기 & To-Do</title>
+  
+  <!-- PWA & 모바일 최적화 메타 태그 -->
+  <meta name="theme-color" content="#0ea5e9">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="데일리로그">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -893,17 +904,176 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* 반응형 */
-    @media (max-width: 640px) {
-      .day-cell {
-        min-height: 80px;
-        padding: 4px;
+    /* 모바일 플로팅 액션 버튼 (FAB) */
+    .fab-btn {
+      display: none;
+      position: fixed;
+      bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      right: 20px;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 16px rgba(14, 165, 233, 0.45), 0 2px 6px rgba(0, 0, 0, 0.1);
+      font-size: 32px;
+      font-weight: 300;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 90;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .fab-btn:active {
+      transform: scale(0.92);
+      background: var(--primary-hover);
+    }
+
+    /* 모바일 더보기 드롭다운 */
+    .mobile-menu-container {
+      position: relative;
+      display: none;
+    }
+    .mobile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      min-width: 190px;
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      z-index: 150;
+      animation: fadeInDropdown 0.15s ease;
+    }
+    .mobile-dropdown.active {
+      display: flex;
+    }
+    @keyframes fadeInDropdown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-main);
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.12s;
+      width: 100%;
+    }
+    .dropdown-item:hover, .dropdown-item:active {
+      background: #f1f5f9;
+    }
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+    .bottom-sheet-handle {
+      display: none;
+      width: 42px;
+      height: 5px;
+      background: #cbd5e1;
+      border-radius: 3px;
+      margin: 8px auto 10px auto;
+      flex-shrink: 0;
+    }
+
+    /* 모바일 반응형 스타일 */
+    @media (max-width: 768px) {
+      .desktop-only {
+        display: none !important;
       }
-      .current-month-text {
+      .mobile-menu-container {
+        display: block;
+      }
+      .fab-btn {
+        display: flex;
+      }
+      header {
+        padding: 12px 16px;
+      }
+      .logo-title {
         font-size: 18px;
       }
+      main {
+        margin: 16px auto;
+        padding: 0 12px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      /* 바텀 시트 (Bottom Sheet) */
+      .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(2px);
+      }
+      .modal-content {
+        max-width: 100% !important;
+        width: 100% !important;
+        border-radius: 24px 24px 0 0 !important;
+        max-height: 88vh !important;
+        transform: translateY(100%) !important;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      }
+      .modal-overlay.active .modal-content {
+        transform: translateY(0) !important;
+      }
+      .bottom-sheet-handle {
+        display: block;
+      }
+      .modal-header {
+        padding: 10px 20px 14px 20px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .modal-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
+      .day-cell {
+        min-height: 64px;
+        padding: 3px 2px;
+      }
+      .day-number {
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .trip-event-banner {
+        font-size: 10px;
+        padding: 1px 4px;
+        margin-bottom: 2px;
+      }
+      .todo-indicator, .memo-indicator, .diary-indicator {
+        font-size: 10px;
+        padding: 1px 4px;
+        margin-bottom: 2px;
+      }
+      .current-month-text {
+        font-size: 19px;
+      }
       .modal-body {
-        padding: 16px;
+        padding: 16px 18px;
+        gap: 20px;
       }
       .auto-meta-bar {
         flex-direction: column;
@@ -916,6 +1086,10 @@
       .meta-tag input {
         width: auto;
         text-align: right;
+      }
+      /* 모바일 인풋 포커스 시 자동 줌 방지 */
+      input, textarea, select {
+        font-size: 16px !important;
       }
     }
   </style>
@@ -933,12 +1107,25 @@
     </div>
     <div class="header-actions">
       <button class="btn" id="google-auth-btn" style="border-color: #bae6fd; background: #f0f9ff; color: #0284c7; font-weight: 600;">
-        🔑 구글 로그인 (실시간 연동)
+        🔑 구글 로그인
       </button>
-      <button class="btn btn-primary" id="open-trip-modal-btn">✈️ 여행/기간 일정 추가</button>
-      <button class="btn" id="today-btn">📍 오늘로 이동</button>
-      <button class="btn" id="backup-btn" title="모든 데이터 백업">💾 백업</button>
-      <button class="btn" id="restore-btn" title="백업 파일 불러오기">📂 복원</button>
+      <button class="btn btn-primary desktop-only" id="open-trip-modal-btn">✈️ 여행/기간 일정 추가</button>
+      <button class="btn desktop-only" id="today-btn">📍 오늘로 이동</button>
+      <button class="btn desktop-only" id="backup-btn" title="모든 데이터 백업">💾 백업</button>
+      <button class="btn desktop-only" id="restore-btn" title="백업 파일 불러오기">📂 복원</button>
+      
+      <!-- 모바일 더보기 메뉴 -->
+      <div class="mobile-menu-container">
+        <button class="btn" id="mobile-menu-btn" title="메뉴" style="padding: 8px 12px; font-weight: 700; font-size: 16px;">⋮</button>
+        <div class="mobile-dropdown" id="mobile-dropdown">
+          <button class="dropdown-item" id="mobile-today-btn">📍 오늘 날짜로 이동</button>
+          <button class="dropdown-item" id="mobile-trip-btn">✈️ 여행/기간 일정 추가</button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" id="mobile-backup-btn">💾 데이터 백업 (JSON)</button>
+          <button class="dropdown-item" id="mobile-restore-btn">📂 백업 파일 복원</button>
+        </div>
+      </div>
+
       <input type="file" id="restore-file-input" accept=".json" style="display: none;">
     </div>
   </header>
@@ -972,14 +1159,20 @@
     </div>
   </main>
 
+  <!-- 플로팅 액션 버튼 (FAB - 모바일 오늘 빠른 기록) -->
+  <button class="fab-btn" id="fab-add-btn" title="오늘 바로 기록하기">＋</button>
+
   <!-- 날짜 상세 및 일기/할일 작성 모달 -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal-content">
+      <div class="bottom-sheet-handle"></div>
       <div class="modal-header">
-        <div class="modal-date-title" id="modal-date-title">
-          📅 <span>2026년 11월 2일 (월)</span>
+        <div class="modal-header-top">
+          <div class="modal-date-title" id="modal-date-title">
+            📅 <span>2026년 11월 2일 (월)</span>
+          </div>
+          <button class="close-btn" id="modal-close-btn">&times;</button>
         </div>
-        <button class="close-btn" id="modal-close-btn">&times;</button>
       </div>
 
       <div class="modal-body">
@@ -1092,11 +1285,14 @@
   <!-- 여행/기간 일정 등록 모달 -->
   <div class="modal-overlay" id="trip-modal-overlay">
     <div class="modal-content" style="max-width: 480px;">
+      <div class="bottom-sheet-handle"></div>
       <div class="modal-header">
-        <div class="modal-date-title">
-          ✈️ <span>여행 / 기간 일정 등록</span>
+        <div class="modal-header-top">
+          <div class="modal-date-title">
+            ✈️ <span>여행 / 기간 일정 등록</span>
+          </div>
+          <button class="close-btn" id="trip-modal-close-btn">&times;</button>
         </div>
-        <button class="close-btn" id="trip-modal-close-btn">&times;</button>
       </div>
       <div class="modal-body" style="gap: 16px;">
         <div>
@@ -2457,6 +2653,53 @@
       }
     });
 
+    // ================= 모바일 메뉴 및 FAB 이벤트 =================
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileDropdown = document.getElementById('mobile-dropdown');
+    if (mobileMenuBtn && mobileDropdown) {
+      mobileMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mobileDropdown.classList.toggle('active');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!mobileDropdown.contains(e.target) && e.target !== mobileMenuBtn) {
+          mobileDropdown.classList.remove('active');
+        }
+      });
+
+      document.getElementById('mobile-today-btn').addEventListener('click', () => {
+        currentDate = new Date();
+        renderCalendar();
+        mobileDropdown.classList.remove('active');
+        showToast('오늘 날짜로 이동했습니다.');
+      });
+
+      document.getElementById('mobile-trip-btn').addEventListener('click', () => {
+        mobileDropdown.classList.remove('active');
+        openTripModal();
+      });
+
+      document.getElementById('mobile-backup-btn').addEventListener('click', () => {
+        mobileDropdown.classList.remove('active');
+        backupData();
+      });
+
+      document.getElementById('mobile-restore-btn').addEventListener('click', () => {
+        mobileDropdown.classList.remove('active');
+        document.getElementById('restore-file-input').click();
+      });
+    }
+
+    // 모바일 FAB 플로팅 버튼: 오늘 날짜 모달 즉시 열기
+    const fabBtn = document.getElementById('fab-add-btn');
+    if (fabBtn) {
+      fabBtn.addEventListener('click', () => {
+        const todayStr = formatDateKey(new Date());
+        openModal(todayStr);
+      });
+    }
+
     // 모달 배경 클릭 시 닫기
     document.getElementById('modal-overlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('modal-overlay')) {
@@ -2505,6 +2748,15 @@
 
     // 초기 렌더링
     renderCalendar();
+
+    // PWA Service Worker 등록
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.warn('PWA ServiceWorker 등록 알림:', err);
+        });
+      });
+    }
   </script>
 </body>
 </html>
