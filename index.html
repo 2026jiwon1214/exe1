@@ -634,6 +634,118 @@
       border: 1px dashed var(--border);
     }
 
+    /* 타임라인 다중 메모 스타일 */
+    .memo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .memo-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      gap: 10px;
+      transition: all 0.15s ease;
+    }
+
+    .memo-item:hover {
+      background: #f1f5f9;
+      border-color: var(--border-dark);
+    }
+
+    .memo-item-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .memo-time-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0284c7;
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      width: fit-content;
+    }
+
+    .memo-content {
+      font-size: 14px;
+      color: var(--text-main);
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .memo-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .memo-action-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .memo-action-btn:hover {
+      color: var(--primary);
+      background: #e0f2fe;
+    }
+
+    .memo-action-btn.delete:hover {
+      color: var(--danger);
+      background: var(--danger-light);
+    }
+
+    .memo-empty-msg {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 14px;
+      background: #fafafa;
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border);
+    }
+
+    .memo-indicator {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
     /* 일기(Diary) 영역 스타일 */
     .auto-meta-bar {
       display: flex;
@@ -899,19 +1011,37 @@
           </div>
         </div>
 
+        <hr id="memo-divider" style="border: 0; border-top: 1px solid var(--border);">
+
+        <!-- 2. 하루 메모 (타임라인 빠른 기록) 섹션 -->
+        <div id="memo-section">
+          <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>💭 하루 메모 (자주 기록하기)</span>
+            <span id="memo-count-badge" style="font-size: 11px; font-weight: 600; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 10px;">0개</span>
+          </div>
+          <div class="todo-input-group">
+            <input type="time" class="todo-time-input" id="memo-time" title="메모 작성 시각">
+            <input type="text" class="todo-input" id="memo-input" placeholder="간단한 생각이나 메모를 입력하세요... (Enter)">
+            <button class="btn btn-primary" id="memo-add-btn">기록</button>
+          </div>
+          <div class="memo-list" id="memo-list">
+            <!-- 메모 목록 -->
+          </div>
+        </div>
+
         <hr id="diary-divider" style="border: 0; border-top: 1px solid var(--border);">
 
         <!-- 미래 날짜 안내 알림 -->
         <div id="future-notice" style="display: none; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: var(--radius-sm); padding: 14px 16px; color: #0369a1; font-size: 13px; line-height: 1.5;">
           💡 <strong>미래 일정 등록</strong><br>
           미래 날짜에는 예정된 <strong>할 일(To-Do)</strong>만 미리 계획해둘 수 있습니다.<br>
-          일기, 기분, 날씨, 장소 기록은 해당 날짜가 되면 작성할 수 있습니다.
+          메모나 일기, 기분 기록은 해당 날짜가 되면 작성할 수 있습니다.
         </div>
 
-        <!-- 2. 일기(Diary) 섹션 -->
+        <!-- 3. 일기(Diary) 섹션 -->
         <div id="diary-section">
           <div class="section-title">
-            <span>📝 오늘의 일기 / 메모</span>
+            <span>📝 오늘의 일기 / 한줄평 (선택)</span>
           </div>
 
           <!-- 자동 수집 메타 정보 (시간, 날씨, 장소) -->
@@ -1110,7 +1240,7 @@
               if (data.trips) setEventsStore(data.trips);
               if (data.customThemes) setCustomThemes(data.customThemes);
               renderCalendar();
-              if (selectedDateStr && document.getElementById('modal-overlay').style.display === 'flex') {
+              if (selectedDateStr && document.getElementById('modal-overlay').classList.contains('active')) {
                 openModal(selectedDateStr);
               }
               isCloudSyncing = false;
@@ -1134,7 +1264,7 @@
               if (data.trips) setEventsStore(data.trips);
               if (data.customThemes) setCustomThemes(data.customThemes);
               renderCalendar();
-              if (selectedDateStr && document.getElementById('modal-overlay').style.display === 'flex') {
+              if (selectedDateStr && document.getElementById('modal-overlay').classList.contains('active')) {
                 openModal(selectedDateStr);
               }
               isCloudSyncing = false;
@@ -1268,7 +1398,10 @@
 
     function getDayData(dateStr) {
       const store = getStore();
-      return store[dateStr] || { todos: [], diary: null };
+      const dayData = store[dateStr] || { todos: [], diary: null, memos: [] };
+      if (!Array.isArray(dayData.todos)) dayData.todos = [];
+      if (!Array.isArray(dayData.memos)) dayData.memos = [];
+      return dayData;
     }
 
     function saveDayData(dateStr, dayData) {
@@ -1423,7 +1556,19 @@
 
       const dayData = getDayData(dateStr);
 
-      // 2. 일기 인디케이터 (과거 및 오늘 날짜에만 표시)
+      // 2. 다중 메모 인디케이터
+      if (dayData.memos && dayData.memos.length > 0) {
+        const memoBadge = document.createElement('span');
+        memoBadge.className = 'memo-indicator';
+        const count = dayData.memos.length;
+        const first = dayData.memos[0];
+        const preview = first.content.length > 7 ? first.content.substring(0, 7) + '…' : first.content;
+        memoBadge.innerHTML = `💭 <strong>${count}</strong> ${preview}`;
+        memoBadge.title = `메모 ${count}개 (최근: ${first.content})`;
+        indicators.appendChild(memoBadge);
+      }
+
+      // 3. 일기 인디케이터 (과거 및 오늘 날짜에만 표시)
       const isFutureDate = dateStr > todayStr;
       if (!isFutureDate && dayData.diary && (dayData.diary.content || dayData.diary.mood)) {
         if (dayData.diary.mood) {
@@ -1439,7 +1584,7 @@
         }
       }
 
-      // 3. To-Do 및 시간별 일정 인디케이터
+      // 4. To-Do 및 시간별 일정 인디케이터
       if (dayData.todos && dayData.todos.length > 0) {
         const pendingTodos = dayData.todos.filter(t => !t.completed);
         const timedTodos = pendingTodos.filter(t => !!t.time);
@@ -1504,7 +1649,25 @@
       document.getElementById('todo-input').value = '';
       document.getElementById('todo-time').value = '';
 
-      // 2. 일기 및 미래 날짜 제어
+      // 2. 다중 메모 목록 렌더링
+      const memoSection = document.getElementById('memo-section');
+      const memoDivider = document.getElementById('memo-divider');
+      if (isFuture) {
+        if (memoSection) memoSection.style.display = 'none';
+        if (memoDivider) memoDivider.style.display = 'none';
+      } else {
+        if (memoSection) memoSection.style.display = 'block';
+        if (memoDivider) memoDivider.style.display = 'block';
+        renderMemoList(dayData.memos || []);
+        document.getElementById('memo-input').value = '';
+        if (isToday) {
+          document.getElementById('memo-time').value = formatCurrentTime();
+        } else {
+          document.getElementById('memo-time').value = '';
+        }
+      }
+
+      // 3. 일기 및 미래 날짜 제어
       const diarySection = document.getElementById('diary-section');
       const futureNotice = document.getElementById('future-notice');
       const diarySaveBtn = document.getElementById('diary-save-btn');
@@ -1713,6 +1876,141 @@
       saveDayData(selectedDateStr, dayData);
       renderTodoList(todos);
       renderCalendar();
+    }
+
+    // ================= 다중 메모 (타임라인 빠른 기록) 관리 =================
+    function renderMemoList(memos) {
+      const listEl = document.getElementById('memo-list');
+      const countBadge = document.getElementById('memo-count-badge');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+
+      const count = (memos && memos.length) || 0;
+      if (countBadge) {
+        countBadge.textContent = `${count}개`;
+      }
+
+      if (!memos || memos.length === 0) {
+        listEl.innerHTML = '<div class="memo-empty-msg">아직 작성된 메모가 없습니다. 오늘 생각나는 것들을 자유롭게 남겨보세요!</div>';
+        return;
+      }
+
+      // 시간순(오름차순) 정렬: 아침 -> 점심 -> 저녁
+      const sorted = [...memos].sort((a, b) => {
+        if (a.time && b.time) return a.time.localeCompare(b.time);
+        if (a.time && !b.time) return -1;
+        if (!a.time && b.time) return 1;
+        return (a.createdAt || 0) - (b.createdAt || 0);
+      });
+
+      sorted.forEach(memo => {
+        const item = document.createElement('div');
+        item.className = 'memo-item';
+
+        const left = document.createElement('div');
+        left.className = 'memo-item-left';
+
+        if (memo.time) {
+          const timeTag = document.createElement('span');
+          timeTag.className = 'memo-time-tag';
+          timeTag.innerHTML = `🕒 ${memo.time}`;
+          left.appendChild(timeTag);
+        }
+
+        const content = document.createElement('div');
+        content.className = 'memo-content';
+        content.textContent = memo.content;
+        left.appendChild(content);
+
+        const actions = document.createElement('div');
+        actions.className = 'memo-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'memo-action-btn';
+        editBtn.title = '메모 수정';
+        editBtn.innerHTML = '✏️';
+        editBtn.addEventListener('click', () => editMemo(memo.id));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'memo-action-btn delete';
+        delBtn.title = '메모 삭제';
+        delBtn.innerHTML = '✕';
+        delBtn.addEventListener('click', () => deleteMemo(memo.id));
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        item.appendChild(left);
+        item.appendChild(actions);
+        listEl.appendChild(item);
+      });
+    }
+
+    function addMemo() {
+      const input = document.getElementById('memo-input');
+      const timeInput = document.getElementById('memo-time');
+      const text = input.value.trim();
+      let time = timeInput.value.trim();
+
+      if (!text) {
+        input.focus();
+        return;
+      }
+
+      const todayStr = formatDateKey(new Date());
+      if (!time && selectedDateStr === todayStr) {
+        time = formatCurrentTime();
+      }
+
+      const dayData = getDayData(selectedDateStr);
+      if (!Array.isArray(dayData.memos)) dayData.memos = [];
+
+      dayData.memos.push({
+        id: 'memo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        content: text,
+        time: time,
+        createdAt: Date.now()
+      });
+
+      saveDayData(selectedDateStr, dayData);
+      renderMemoList(dayData.memos);
+      renderCalendar();
+
+      input.value = '';
+      if (selectedDateStr === todayStr) {
+        timeInput.value = formatCurrentTime();
+      } else {
+        timeInput.value = '';
+      }
+      input.focus();
+      showToast('메모가 등록되었습니다. 💭');
+    }
+
+    function deleteMemo(memoId) {
+      if (!confirm('이 메모를 삭제하시겠습니까?')) return;
+      const dayData = getDayData(selectedDateStr);
+      if (!dayData.memos) return;
+      dayData.memos = dayData.memos.filter(m => m.id !== memoId);
+      saveDayData(selectedDateStr, dayData);
+      renderMemoList(dayData.memos);
+      renderCalendar();
+      showToast('메모가 삭제되었습니다.');
+    }
+
+    function editMemo(memoId) {
+      const dayData = getDayData(selectedDateStr);
+      if (!dayData.memos) return;
+      const memo = dayData.memos.find(m => m.id === memoId);
+      if (!memo) return;
+
+      const newContent = prompt('메모 내용 수정:', memo.content);
+      if (newContent !== null && newContent.trim() !== '') {
+        memo.content = newContent.trim();
+        saveDayData(selectedDateStr, dayData);
+        renderMemoList(dayData.memos);
+        renderCalendar();
+        showToast('메모가 수정되었습니다.');
+      }
     }
 
     // 일기 저장
@@ -2109,6 +2407,12 @@
     document.getElementById('todo-add-btn').addEventListener('click', addTodo);
     document.getElementById('todo-input').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') addTodo();
+    });
+
+    // 메모 이벤트
+    document.getElementById('memo-add-btn').addEventListener('click', addMemo);
+    document.getElementById('memo-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addMemo();
     });
 
     document.getElementById('modal-add-trip-btn').addEventListener('click', () => {
