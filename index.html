@@ -1109,6 +1109,9 @@
       <button class="btn" id="google-auth-btn" style="border-color: #bae6fd; background: #f0f9ff; color: #0284c7; font-weight: 600;">
         🔑 구글 로그인
       </button>
+      <button class="btn desktop-only" id="app-install-btn" style="border-color: #0ea5e9; color: #0284c7; background: #f0f9ff; font-weight: 600;">
+        📱 앱 설치 (APK)
+      </button>
       <button class="btn btn-primary desktop-only" id="open-trip-modal-btn">✈️ 여행/기간 일정 추가</button>
       <button class="btn desktop-only" id="today-btn">📍 오늘로 이동</button>
       <button class="btn desktop-only" id="backup-btn" title="모든 데이터 백업">💾 백업</button>
@@ -1118,6 +1121,8 @@
       <div class="mobile-menu-container">
         <button class="btn" id="mobile-menu-btn" title="메뉴" style="padding: 8px 12px; font-weight: 700; font-size: 16px;">⋮</button>
         <div class="mobile-dropdown" id="mobile-dropdown">
+          <button class="dropdown-item" id="mobile-install-btn" style="color: #0284c7; font-weight: 600;">📱 앱 설치 (APK / QR코드)</button>
+          <div class="dropdown-divider"></div>
           <button class="dropdown-item" id="mobile-today-btn">📍 오늘 날짜로 이동</button>
           <button class="dropdown-item" id="mobile-trip-btn">✈️ 여행/기간 일정 추가</button>
           <div class="dropdown-divider"></div>
@@ -1343,6 +1348,60 @@
       <div class="modal-footer">
         <button class="btn" id="trip-modal-cancel-btn">취소</button>
         <button class="btn btn-primary" id="trip-save-btn">등록하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 앱 설치 안내 모달 (APK & QR 코드) -->
+  <div class="modal-overlay" id="install-modal-overlay">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="bottom-sheet-handle"></div>
+      <div class="modal-header">
+        <div class="modal-header-top">
+          <div class="modal-date-title">
+            📱 <span>갤럭시 앱 설치 (APK)</span>
+          </div>
+          <button class="close-btn" id="install-modal-close-btn">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body" style="text-align: center; gap: 16px; padding: 20px;">
+        <p style="font-size: 14px; color: var(--text-sub); line-height: 1.5;">
+          휴대폰 <strong>기본 카메라</strong>를 켜서 아래 QR 코드를 비추면<br>
+          <strong>APK 설치 파일이 즉시 다운로드</strong>됩니다.
+        </p>
+
+        <!-- QR 코드 영역 -->
+        <div style="display: flex; justify-content: center; margin: 4px 0;">
+          <div style="background: #fff; padding: 12px; border-radius: var(--radius-md); border: 2px solid #bae6fd; box-shadow: var(--shadow-md); display: inline-block;">
+            <img src="qr_apk.png" alt="APK 다운로드 QR 코드" style="width: 200px; height: 200px; display: block; border-radius: 8px;">
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+          <a href="daily-log.apk" download="daily-log.apk" class="btn btn-primary" id="direct-apk-download-btn" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px; font-weight: 600; text-decoration: none;">
+            📥 APK 파일 직접 다운로드
+          </a>
+          <button type="button" class="btn" id="pwa-guide-toggle-btn" style="width: 100%; justify-content: center; font-size: 13px; color: #0284c7; background: #f0f9ff; border-color: #bae6fd;">
+            ⚡ 다운로드 없이 1초 설치하기 (PWA)
+          </button>
+        </div>
+
+        <!-- 1초 PWA 설치 안내 박스 -->
+        <div id="pwa-guide-box" style="display: none; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: left; font-size: 12px; line-height: 1.6; color: var(--text-sub);">
+          💡 <strong>파일 다운로드 없는 초간편 설치:</strong><br>
+          스마트폰 브라우저(삼성 인터넷 또는 크롬)에서 상단/하단 메뉴의 <strong>[홈 화면에 앱 추가]</strong> 또는 <strong>[앱 설치]</strong>를 누르면 파일 다운로드 없이 바탕화면에 즉시 설치됩니다!
+        </div>
+
+        <!-- 설치 안내 가이드 -->
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: var(--radius-sm); padding: 12px 14px; text-align: left; font-size: 12px; color: #0369a1; line-height: 1.6;">
+          <strong>💡 갤럭시 설치 방법 (3단계):</strong><br>
+          1. 카메라로 QR 코드를 비춰 '다운로드 링크' 터치<br>
+          2. 다운로드 완료 후 상단 알림에서 파일 열기<br>
+          3. '출처를 알 수 없는 앱' 안내가 뜨면 <strong>[허용]</strong> 또는 <strong>[무시하고 설치]</strong> 터치!
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button class="btn" id="install-modal-ok-btn" style="width: 100%;">닫기</button>
       </div>
     </div>
   </div>
@@ -2700,6 +2759,43 @@
       });
     }
 
+    // ================= 앱 설치 모달 이벤트 =================
+    function openInstallModal() {
+      const modal = document.getElementById('install-modal-overlay');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeInstallModal() {
+      const modal = document.getElementById('install-modal-overlay');
+      if (modal) modal.classList.remove('active');
+    }
+
+    const appInstallBtn = document.getElementById('app-install-btn');
+    if (appInstallBtn) appInstallBtn.addEventListener('click', openInstallModal);
+
+    const mobileInstallBtn = document.getElementById('mobile-install-btn');
+    if (mobileInstallBtn) {
+      mobileInstallBtn.addEventListener('click', () => {
+        if (mobileDropdown) mobileDropdown.classList.remove('active');
+        openInstallModal();
+      });
+    }
+
+    const installCloseBtn = document.getElementById('install-modal-close-btn');
+    if (installCloseBtn) installCloseBtn.addEventListener('click', closeInstallModal);
+
+    const installOkBtn = document.getElementById('install-modal-ok-btn');
+    if (installOkBtn) installOkBtn.addEventListener('click', closeInstallModal);
+
+    const pwaGuideToggleBtn = document.getElementById('pwa-guide-toggle-btn');
+    const pwaGuideBox = document.getElementById('pwa-guide-box');
+    if (pwaGuideToggleBtn && pwaGuideBox) {
+      pwaGuideToggleBtn.addEventListener('click', () => {
+        const isHidden = pwaGuideBox.style.display === 'none';
+        pwaGuideBox.style.display = isHidden ? 'block' : 'none';
+      });
+    }
+
     // 모달 배경 클릭 시 닫기
     document.getElementById('modal-overlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('modal-overlay')) {
@@ -2711,12 +2807,18 @@
         closeTripModal();
       }
     });
+    document.getElementById('install-modal-overlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('install-modal-overlay')) {
+        closeInstallModal();
+      }
+    });
 
     // ESC 키로 모달 닫기
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeModal();
         closeTripModal();
+        closeInstallModal();
       }
     });
 
