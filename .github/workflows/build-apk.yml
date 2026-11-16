@@ -68,7 +68,9 @@ jobs:
 
       - name: Copy APK to repository root
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk ./daily-log.apk
+          APK=$(find android -name "*.apk" | head -1)
+          echo "Found APK at: $APK"
+          cp "$APK" ./daily-log.apk
           ls -lh ./daily-log.apk
 
       - name: Upload APK as GitHub Artifact
