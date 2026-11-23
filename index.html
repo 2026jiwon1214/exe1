@@ -1855,16 +1855,15 @@
 
       const dayData = getDayData(dateStr);
 
-      // 2. 다중 메모 인디케이터
+      // 2. 다중 메모 인디케이터 (각각 따로 표시)
       if (dayData.memos && dayData.memos.length > 0) {
-        const memoBadge = document.createElement('span');
-        memoBadge.className = 'memo-indicator';
-        const count = dayData.memos.length;
-        const first = dayData.memos[0];
-        const preview = first.content.length > 7 ? first.content.substring(0, 7) + '…' : first.content;
-        memoBadge.innerHTML = `<strong>${count}</strong> ${preview}`;
-        memoBadge.title = `메모 ${count}개 (최근: ${first.content})`;
-        indicators.appendChild(memoBadge);
+        dayData.memos.forEach(memo => {
+          const memoBadge = document.createElement('span');
+          memoBadge.className = 'memo-indicator';
+          memoBadge.textContent = memo.content;
+          memoBadge.title = memo.time ? `[${memo.time}] ${memo.content}` : memo.content;
+          indicators.appendChild(memoBadge);
+        });
       }
 
       // 3. 일기 인디케이터 (과거 및 오늘 날짜에만 표시)
