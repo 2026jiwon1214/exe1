@@ -1029,9 +1029,25 @@
       .logo-title {
         font-size: 18px;
       }
+      /* 모바일에서는 스크롤 가능하게 (전체화면 고정 해제) */
+      body {
+        height: auto;
+        min-height: 100vh;
+        overflow: auto;
+      }
       main {
         margin: 0 auto;
         padding: 10px 8px;
+        overflow: visible;
+        display: block;
+      }
+      .calendar-container {
+        flex: unset;
+        display: block;
+      }
+      .days-grid {
+        flex: unset;
+        grid-auto-rows: auto;
       }
     }
 
