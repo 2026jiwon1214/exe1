@@ -1862,7 +1862,7 @@
         const count = dayData.memos.length;
         const first = dayData.memos[0];
         const preview = first.content.length > 7 ? first.content.substring(0, 7) + '…' : first.content;
-        memoBadge.innerHTML = `💭 <strong>${count}</strong> ${preview}`;
+        memoBadge.innerHTML = `<strong>${count}</strong> ${preview}`;
         memoBadge.title = `메모 ${count}개 (최근: ${first.content})`;
         indicators.appendChild(memoBadge);
       }
