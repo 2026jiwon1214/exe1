@@ -61,6 +61,7 @@
       background-color: var(--bg-page);
       color: var(--text-main);
       height: 100vh;
+      height: 100dvh; /* 모바일 주소창 포함 정확한 뷰포트 */
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -74,8 +75,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
+      flex-shrink: 0; /* 헤더 높이 고정 */
       z-index: 10;
     }
 
@@ -1029,29 +1029,32 @@
       .logo-title {
         font-size: 18px;
       }
-      /* 모바일에서는 스크롤 가능하게 (전체화면 고정 해제) */
+      /* 모바일에서도 전체화면 꽉차게 */
       body {
-        height: auto;
-        min-height: 100vh;
-        overflow: auto;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
       }
       main {
         margin: 0 auto;
-        padding: 10px 8px;
-        overflow: visible;
-        display: block;
+        padding: 8px 6px;
       }
       .calendar-container {
-        flex: unset;
-        display: block;
+        border-radius: 10px;
       }
-      .days-grid {
-        flex: unset;
-        grid-auto-rows: auto;
+      .calendar-header {
+        margin-bottom: 8px;
+      }
+      .current-month-text {
+        font-size: 18px;
       }
     }
 
     @media (max-width: 640px) {
+      /* 헤더 높이 최소화 */
+      header {
+        padding: 8px 12px;
+      }
       /* 바텀 시트 (Bottom Sheet) */
       .modal-overlay {
         align-items: flex-end;
@@ -1086,7 +1089,6 @@
         width: 100%;
       }
       .day-cell {
-        min-height: 64px;
         padding: 3px 2px;
         overflow: hidden;
         min-width: 0;
